@@ -24,8 +24,7 @@ import java.security.SecureRandom
 import java.time.Instant
 import java.util.*
 
-@Component
-class EveSSOService @Autowired constructor(val properties: EveEngineProperties){
+class EveSSOService (val properties: EveEngineProperties){
     private lateinit var server: HttpServer
     private var isRunning: Boolean = false
     private var job: Job? = null

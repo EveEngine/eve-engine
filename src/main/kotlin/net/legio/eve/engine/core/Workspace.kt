@@ -8,7 +8,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-@Component
 class Workspace : IWorkspace{
 
     private final var mRootPath: Path

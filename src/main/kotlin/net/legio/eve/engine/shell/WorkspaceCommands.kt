@@ -1,5 +1,6 @@
 package net.legio.eve.engine.shell
 
+import net.legio.eve.engine.core.IWorkspace
 import net.legio.eve.engine.core.Workspace
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.shell.standard.ShellCommandGroup
@@ -13,7 +14,7 @@ import java.nio.file.attribute.BasicFileAttributes
 @ShellComponent
 @ShellCommandGroup("workspace")
 internal class WorkspaceCommands @Autowired constructor(
-        private val workspace: Workspace
+        private val workspace: IWorkspace
 ) {
 
     @ShellMethod(value = "Check that the workspace exists.", key = ["workspace exists"])
