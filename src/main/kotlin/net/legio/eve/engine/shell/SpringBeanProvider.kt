@@ -2,6 +2,7 @@ package net.legio.eve.engine.shell
 
 import net.legio.eve.engine.core.*
 import net.legio.eve.engine.core.EngineCoreService
+import net.legio.eve.engine.data.DocumentESDRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Scope
@@ -22,4 +23,7 @@ open class SpringBeanProvider {
     @Scope("singleton")
     open fun workspace(): IWorkspace = Workspace()
 
+    @Bean
+    @Scope("singleton")
+    open fun esdRepository(workspace: IWorkspace): DocumentESDRepository = DocumentESDRepository(workspace)
 }
