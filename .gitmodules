@@ -1,0 +1,3 @@
+[submodule "esi4k"]
+	path = esi4k
+	url = https://github.com/EveEngine/esi4k
