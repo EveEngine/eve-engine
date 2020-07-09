@@ -1,8 +1,6 @@
 package net.legio.eve.engine.data
 
-import net.legio.eve.engine.data.entity.ESDData
-
 sealed class FindResult
-class GoodResult<T: ESDData>(val data: Array<T>): FindResult()
-object NotFoundResult: FindResult()
-class ErrorResult(val error: String?): FindResult()
+class Found<T>(val data: Array<T>): FindResult()
+object NotFound: FindResult()
+class FindError(val error: String?): FindResult()

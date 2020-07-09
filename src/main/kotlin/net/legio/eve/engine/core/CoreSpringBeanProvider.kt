@@ -1,5 +1,6 @@
 package net.legio.eve.engine.core
 
+import net.legio.eve.engine.SingletonBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Scope
@@ -7,16 +8,13 @@ import org.springframework.context.annotation.Scope
 @Configuration
 open class CoreSpringBeanProvider {
 
-    @Bean
-    @Scope("singleton")
+    @SingletonBean
     open fun provideEngineCoreService(): IEngineCoreService = EngineCoreService()
 
-    @Bean
-    @Scope("singleton")
+    @SingletonBean
     open fun eveSSOService(properties: EveEngineProperties): EveSSOService = EveSSOService(properties)
 
-    @Bean
-    @Scope("singleton")
+    @SingletonBean
     open fun workspace(): IWorkspace = Workspace()
 
 }
