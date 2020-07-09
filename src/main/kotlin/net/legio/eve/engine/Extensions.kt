@@ -14,6 +14,8 @@ fun Path.inputStream(): InputStream {
     return Files.newInputStream(this)
 }
 
+fun Path.toAbsoluteString() = this.toAbsolutePath().toString()
+
 fun String.containsWhitespace(): Boolean {
     return this.toCharArray().any { c -> c.isWhitespace() }
 }

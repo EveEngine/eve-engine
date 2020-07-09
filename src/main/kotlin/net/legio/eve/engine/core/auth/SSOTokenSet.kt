@@ -1,4 +1,4 @@
-package net.legio.eve.engine.core
+package net.legio.eve.engine.core.auth
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

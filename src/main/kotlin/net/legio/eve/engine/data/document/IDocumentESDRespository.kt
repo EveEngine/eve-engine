@@ -10,6 +10,7 @@ import org.dizitart.no2.objects.ObjectFilter
  * therefore no updates, inserts or deletion functions should be exposed.
  */
 interface IDocumentESDRepository : ESDRepository {
+    fun initialize()
     fun <T: ESDData> find(options: FindOptions): Array<T>
     fun <T: ESDData> find(filter: ObjectFilter): Array<T>
 }

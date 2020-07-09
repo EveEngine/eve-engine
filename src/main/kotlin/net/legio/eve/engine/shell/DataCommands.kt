@@ -1,7 +1,8 @@
 package net.legio.eve.engine.shell
 
-import net.legio.eve.engine.data.DocumentESDRepository
+import net.legio.eve.engine.data.document.DocumentESDRepository
 import net.legio.eve.engine.data.UpdateOutcome
+import net.legio.eve.engine.data.document.IDocumentESDRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.shell.standard.ShellCommandGroup
 import org.springframework.shell.standard.ShellComponent
@@ -10,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @ShellComponent
 @ShellCommandGroup("data")
-class DataCommands @Autowired constructor(val esdRepository: DocumentESDRepository) {
+class DataCommands @Autowired constructor(val esdRepository: IDocumentESDRepository) {
 
     @ShellMethod(value = "Initialize the ESD repository locally.", key = ["esd init"])
     fun _esdInit(): String {

@@ -3,7 +3,7 @@ package net.legio.eve.engine.data.entity
 import org.dizitart.no2.objects.Id
 
 data class Faction (
-    @Id override val objectId: Long,
+    @Id override var objectId: Long,
     val factionID: Int,
     val factionName: String,
     val description: String,

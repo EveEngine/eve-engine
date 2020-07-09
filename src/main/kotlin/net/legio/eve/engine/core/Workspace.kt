@@ -1,6 +1,5 @@
 package net.legio.eve.engine.core
 
-import org.springframework.stereotype.Component
 import java.io.FileNotFoundException
 import java.lang.IllegalArgumentException
 import java.nio.charset.Charset
@@ -10,9 +9,9 @@ import java.nio.file.Paths
 
 class Workspace : IWorkspace{
 
-    private final var mRootPath: Path
-    private final var mDataPath: Path
-    private final var mCachePath: Path
+    private val mRootPath: Path
+    private val mDataPath: Path
+    private val mCachePath: Path
 
     init {
         val userHome = System.getProperty("user.home")

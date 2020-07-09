@@ -1,11 +1,20 @@
-package net.legio.eve.engine.data
+package net.legio.eve.engine.data.document
 
+import com.eve_engine.esi4k.ESIClient
+import com.eve_engine.esi4k.ESISuccessResponse
+import com.eve_engine.esi4k.model.Faction
+import com.eve_engine.esi4k.resource.GoodReify
+import com.eve_engine.esi4k.resource.ReifyResult
+import com.eve_engine.esi4k.resource.UniverseResources
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import net.legio.eve.engine.Outcome
+import net.legio.eve.engine.core.EveSSOService
 import net.legio.eve.engine.core.IWorkspace
+import net.legio.eve.engine.core.auth.AuthManager
+import net.legio.eve.engine.core.auth.BaseAuthManager
+import net.legio.eve.engine.data.*
 import net.legio.eve.engine.data.ESDRepository.Companion.SDE_MD5_ADDR
 import net.legio.eve.engine.data.UpToDateCheck.*
-import net.legio.eve.engine.data.document.IDocumentESDRepository
 import net.legio.eve.engine.data.entity.ESDData
 import org.dizitart.kno2.nitrite
 import org.dizitart.no2.FindOptions
@@ -21,7 +30,7 @@ import java.nio.file.Paths
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
-class DocumentESDRepository(val workspace: IWorkspace): IDocumentESDRepository{
+class DocumentESDRepository(private val workspace: IWorkspace, private val authManager: BaseAuthManager): IDocumentESDRepository{
 
     override val databasePath: Path
     private var database: Nitrite
@@ -44,7 +53,7 @@ class DocumentESDRepository(val workspace: IWorkspace): IDocumentESDRepository{
         return metadata() == null
     }
 
-    fun initialize() {
+    override fun initialize() {
 
     }
 
@@ -61,7 +70,7 @@ class DocumentESDRepository(val workspace: IWorkspace): IDocumentESDRepository{
             return OutOfDate
         }
         return try {
-            val remoteMD5 = with(URL(ESDRepository.SDE_MD5_ADDR).openConnection()) {
+            val remoteMD5 = with(URL(SDE_MD5_ADDR).openConnection()) {
                 setRequestProperty("User-Agent", "EveEngine")
                 connect()
                 getInputStream().readAllBytes().toString(Charsets.UTF_8)
@@ -82,7 +91,7 @@ class DocumentESDRepository(val workspace: IWorkspace): IDocumentESDRepository{
                 val downloadRunnables: MutableList<Callable<Outcome>> = ArrayList()
 
                 for (category in SDECategory.values()) {
-                    downloadRunnables.add(Callable<Outcome> {
+                    downloadRunnables.add(Callable {
                         val categoryUrl = category.categoryURL.openConnection().apply {
                             setRequestProperty(
                                 "User-Agent",
@@ -109,35 +118,55 @@ class DocumentESDRepository(val workspace: IWorkspace): IDocumentESDRepository{
                     sdeDownloadExecutor.shutdown()
                     futures.firstOrNull { f -> f.get() is Outcome.Failed }?.let {
                         val outcome = it.get() as Outcome.Failed
-                        callback.invoke(UpdateOutcome.BadUpdate(outcome.message, outcome.exception))
-                        //TODO Cleanup after a failed ESD download
+                        callback.invoke(
+                            UpdateOutcome.BadUpdate(
+                                outcome.message,
+                                outcome.exception
+                            )
+                        )
+                        cleanupTempDownload(esdRawDir)
                         return
                     }
                 } catch (e: InterruptedException) {
                     // TODO handle error
                 }
                 val om = jacksonObjectMapper()
+                val esiClient = ESIClient()
                 try {
                     for (c in SDECategory.values()) {
-                        val materials = om.readValue<Array<ESDData>>(
-                            Files.readAllBytes(Paths.get(esdRawDir.toString(), c.fileName)),
+                        val materialPath = Paths.get(esdRawDir.toString(), c.fileName)
+                        var materials: Array<ESDData>? = null
+                        var materialsRaw: ByteArray = Files.readAllBytes(Paths.get(esdRawDir.toString(), c.fileName))
+                        materials = om.readValue<Array<ESDData>>(
+                            materialsRaw,
                             jacksonObjectMapper().typeFactory.constructArrayType(c.dataClass)
                         )
+                        if(materials.isEmpty()) {
+                        }
+                        requireNotNull(materialsRaw){"Data mapping for ${c.dataClass.name} failed."}
                         insertBulk(database, materials)
                     }
                 }catch (e: Exception){
                     callback.invoke(UpdateOutcome.BadUpdate("", e))
+                    cleanupTempDownload(esdRawDir)
                     return
-                    // TODO Cleanup after failed ESD udpate
                 }
                 //TODO Cleanup after successful ESD update
+                cleanupTempDownload(esdRawDir)
                 callback.invoke(UpdateOutcome.GoodUpdate)
             }
         }
     }
 
-    private fun cleanupTempDownload(){
-
+    private fun cleanupTempDownload(temp: Path){
+        try{
+            if(Files.isDirectory(temp)){
+                for(file in temp.toFile().listFiles()?: arrayOf()){
+                    Files.deleteIfExists(file.toPath())
+                }
+            }
+            Files.deleteIfExists(temp)
+        }catch (e: Exception) {}
     }
 
     private inline fun <reified T: ESDData> insertBulk(database: Nitrite, d: Array<T>) {

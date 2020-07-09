@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.Job
+import net.legio.eve.engine.core.auth.SSOTokenSet
 import org.apache.http.HttpHeaders
 import org.apache.http.NameValuePair
 import org.apache.http.client.entity.UrlEncodedFormEntity
@@ -13,8 +14,6 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicNameValuePair
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.io.IOException
 import java.lang.StringBuilder
 import java.net.InetSocketAddress
@@ -30,7 +29,7 @@ class EveSSOService (val properties: EveEngineProperties){
     private var job: Job? = null
     private val authCredsEncoded: ByteArray
     private var state: String? = null
-    private var onSSOSuccess: ((SSOTokenSet) -> Unit)? = null
+    var onSSOSuccess: ((SSOTokenSet) -> Unit)? = null
     val challenge: String
     val challengeEncoded: String
 
