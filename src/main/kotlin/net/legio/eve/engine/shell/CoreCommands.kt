@@ -8,9 +8,7 @@ import org.springframework.shell.standard.ShellMethod
 
 @ShellComponent
 @ShellCommandGroup("core")
-internal class CoreCommands @Autowired constructor(
-        val coreService: IEngineCoreService
-) {
+internal class CoreCommands @Autowired constructor(val coreService: IEngineCoreService) {
 
     @ShellMethod(value = "Check connectivity to the network", key = ["core network status"])
     fun _coreNetworkStatus(): String{
@@ -20,4 +18,5 @@ internal class CoreCommands @Autowired constructor(
     companion object {
         const val GROUP = "core"
     }
+
 }

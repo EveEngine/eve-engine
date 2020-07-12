@@ -21,8 +21,7 @@ open class EveEngineShell {
     companion object {
         @JvmStatic
         fun main(args: Array<String>){
-            val context = SpringApplication.run(EveEngineShell::class.java, *args)
-            context.beanDefinitionNames.forEach { d -> println(d) }
+            SpringApplication.run(EveEngineShell::class.java)
         }
     }
 

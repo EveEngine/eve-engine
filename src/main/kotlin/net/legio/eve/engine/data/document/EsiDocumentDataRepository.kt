@@ -1,16 +1,18 @@
 package net.legio.eve.engine.data.document
 
 import net.legio.eve.engine.core.IWorkspace
-import net.legio.eve.engine.core.auth.BaseAuthManager
-import net.legio.eve.engine.data.EsiDataRepository
 import net.legio.eve.engine.toAbsoluteString
 import org.dizitart.kno2.nitrite
 import org.dizitart.no2.FindOptions
-import org.dizitart.no2.Nitrite
 import org.dizitart.no2.objects.ObjectFilter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Paths
+import kotlin.reflect.KClass
 
-class EsiDocumentDataRepository(workspace: IWorkspace): EsiDataRepository(workspace), IEsiDocumentDataRepository{
+class EsiDocumentDataRepository(workspace: IWorkspace): IEsiDocumentDataRepository{
+
+    private val dbPath = Paths.get(workspace.dataDirectory().toAbsoluteString(), "esi.db")
 
     private val database = nitrite {
         file = dbPath.toFile()
@@ -20,20 +22,75 @@ class EsiDocumentDataRepository(workspace: IWorkspace): EsiDataRepository(worksp
         autoCompact = true
     }
 
-    override fun isInitialized() {
-        TODO("Not yet implemented")
+    override fun isInitialized(): Boolean {
+        getMetadata().let {md ->
+            if(md.initializedOn == null){
+                return false
+            }
+        }
+        return true
     }
 
-    override fun <T: DocumentItem> find(options: FindOptions): Array<T> {
-        TODO("Not yet implemented")
+    fun initialize(){
+        if(isInitialized()) return
+
     }
 
-    override fun <T: DocumentItem> find(filter: ObjectFilter): Array<T> {
-        TODO("Not yet implemented")
+    override fun clear() {
+        LOG.trace("Clearing ESI document repository")
+        getMetadata().let { md ->
+            md.repoRegistry?.also { rr ->
+                rr.repoKeys().forEach { key ->
+                    database.getRepository(rr.klassForKey(key)?.javaObjectType)?.drop()
+                    LOG.trace(" Cleared $key")
+                }
+            }
+        }
+
+        LOG.trace("Repository cleared")
     }
 
-    private inline fun <reified T: DocumentItem> insertBulk(data: Array<T>) {
-        database.getRepository(T::class.javaObjectType).insert(data)
+    private fun updateMetadata(metadata: RepoMetadata){
+        val repo = database.getRepository(RepoMetadata::class.java)
+        if(metadata.objectId == null){
+            repo.insert(metadata)
+        }else{
+            repo.update(metadata)
+        }
+    }
+
+    private fun getMetadata(): RepoMetadata {
+        val repo = database.getRepository(RepoMetadata::class.java)
+        return repo.find().firstOrNull()?:RepoMetadata.createDefault()
+    }
+
+    override fun <T : DocumentItem> registerType(klass: KClass<T>) {
+        getMetadata()?.repoRegistry?.registerKey(klass.simpleName!!, klass)
+    }
+
+    override fun <T: DocumentItem> find(options: FindOptions, klass: KClass<T>): List<T> {
+        val results = database.getRepository(klass.javaObjectType).find(options)
+        return results.toList()
+    }
+
+    override fun <T: DocumentItem> find(filter: ObjectFilter, klass: KClass<T>): List<T> {
+        val results = database.getRepository(klass.javaObjectType).find(filter)
+        return results.toList()
+    }
+
+    override fun <T:DocumentItem> insertBulk(items: Array<T>, klass: KClass<T>){
+        database.getRepository(klass.javaObjectType).insert(items)
+    }
+
+    override fun <T : DocumentItem> insert(item: T, klass: KClass<T>) {
+        database.getRepository(klass.javaObjectType).insert(item)
+    }
+
+    companion object {
+        @JvmStatic private val LOG: Logger = LoggerFactory.getLogger(EsiDocumentDataRepository::class.java)
     }
 
 }
+
+
+

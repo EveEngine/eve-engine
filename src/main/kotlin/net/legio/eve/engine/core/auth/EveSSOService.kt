@@ -1,12 +1,13 @@
-package net.legio.eve.engine.core
+package net.legio.eve.engine.core.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.sun.net.httpserver.HttpContext
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.Job
-import net.legio.eve.engine.core.auth.SSOTokenSet
+import net.legio.eve.engine.core.EveEngineProperties
 import org.apache.http.HttpHeaders
 import org.apache.http.NameValuePair
 import org.apache.http.client.entity.UrlEncodedFormEntity
@@ -24,14 +25,15 @@ import java.time.Instant
 import java.util.*
 
 class EveSSOService (val properties: EveEngineProperties){
-    private lateinit var server: HttpServer
+    private var server: HttpServer? = null
+    private var context: HttpContext? = null
     private var isRunning: Boolean = false
     private var job: Job? = null
     private val authCredsEncoded: ByteArray
     private var state: String? = null
     var onSSOSuccess: ((SSOTokenSet) -> Unit)? = null
     val challenge: String
-    val challengeEncoded: String
+    private val challengeEncoded: String
 
     init {
         val authCredentials = "${properties.clientId}:${properties.clientSecret}"
@@ -64,8 +66,8 @@ class EveSSOService (val properties: EveEngineProperties){
             return
         }
         server = HttpServer.create(InetSocketAddress(12225), 0);
-        val authContext = server.createContext("/esi/auth")
-        authContext.handler = object : HttpHandler {
+        context = server?.createContext("/esi/auth")
+        context?.handler = object : HttpHandler {
             override fun handle(exchange: HttpExchange?) {
                 if (exchange == null) {
                     return
@@ -116,12 +118,13 @@ class EveSSOService (val properties: EveEngineProperties){
                 }
             }
         }
-        server.start()
+        server?.start()
         this.isRunning = true
     }
 
     fun stop(){
-        server.stop(0)
+        server?.stop(0)
+        server?.removeContext(context)
         this.isRunning = false
     }
 

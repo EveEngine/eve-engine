@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("esi4k*.jar"))))
+    implementation(fileTree(mapOf("dir" to "${project.projectDir}/libs", "include" to listOf("*.jar"))))
     implementation("org.apache.httpcomponents:httpcore:4.4.13")
     implementation("org.apache.httpcomponents:httpclient:4.5.12")
 
