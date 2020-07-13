@@ -6,7 +6,12 @@ import javax.annotation.PreDestroy
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
-enum class Scope { Background, UI }
+/**
+ * Thread scope to broadcast the event on.
+ */
+enum class Scope {
+    /**Broadcast the event on the background thread.*/Background,
+    /**Broadcast the event on the UI thread.*/UI }
 
 open class Event(val scope: Scope = Scope.UI)
 

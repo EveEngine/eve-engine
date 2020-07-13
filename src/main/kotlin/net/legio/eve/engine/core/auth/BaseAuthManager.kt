@@ -4,7 +4,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.*
 import net.legio.eve.engine.*
+import net.legio.eve.engine.core.Event
+import net.legio.eve.engine.core.EventBus
 import net.legio.eve.engine.core.IWorkspace
+import net.legio.eve.engine.core.Scope
 import org.apache.http.NameValuePair
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.HttpPost
@@ -15,7 +18,9 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.charset.Charset
 
-abstract class BaseAuthManager(private val ssoService: EveSSOService) {
+data class TokenSetUpdatedEvent(val tokenSet: SSOTokenSet?): Event(Scope.Background)
+
+abstract class BaseAuthManager(private val ssoService: EveSSOService, private val eventBus: EventBus? = null) {
     private val scope = GlobalScope
     private val refreshJob = Job()
 
@@ -23,6 +28,7 @@ abstract class BaseAuthManager(private val ssoService: EveSSOService) {
         set(value){
             field = value
             resetRefresh(field != null)
+            eventBus?.publish(TokenSetUpdatedEvent(value))
         }
 
     protected fun startup(){
@@ -33,13 +39,14 @@ abstract class BaseAuthManager(private val ssoService: EveSSOService) {
         }
         ssoService.onSSOSuccess = { tokenSet ->
             this.tokenSet = tokenSet
-            saveSSOTokenSet(tokenSet!!)
+            saveSSOTokenSet(tokenSet)
         }
     }
 
     protected abstract fun loadSSOTokenSet(): Result<SSOTokenSet>
 
     protected abstract fun saveSSOTokenSet(tokenSet: SSOTokenSet): Result<Unit>
+
 
     /**
      * Cancels the current refreshJob if it is running.

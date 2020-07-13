@@ -1,11 +1,10 @@
 package net.legio.eve.engine.data.document.entity
 
 import com.eve.engine.esi4k.model.Bloodline
-import net.legio.eve.engine.data.document.DocumentItem
-import org.dizitart.no2.NitriteId
+import net.legio.eve.engine.data.DataItem
 
 class DBloodline(
-    override val objectId: NitriteId?,
+    override val id: Long?,
     bloodlineId: Int,
     charisma: Int,
     corporationId: Int,
@@ -29,4 +28,4 @@ class DBloodline(
     raceId,
     shipTypeId,
     willpower
-), DocumentItem
+), DataItem

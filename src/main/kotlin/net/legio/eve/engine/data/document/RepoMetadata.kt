@@ -1,15 +1,15 @@
 package net.legio.eve.engine.data.document
 
-import org.dizitart.no2.NitriteId
+import net.legio.eve.engine.data.DataItem
 import org.dizitart.no2.objects.Id
 import java.time.Instant
 
 internal class RepoMetadata(
-    @Id override val objectId: NitriteId?,
+    @Id override val id: Long?,
     var initializedOn: Instant?,
     var dbSize: Double,
     var repoRegistry: RepoRegistry
-): DocumentItem {
+): DataItem {
 
     companion object {
         @JvmStatic

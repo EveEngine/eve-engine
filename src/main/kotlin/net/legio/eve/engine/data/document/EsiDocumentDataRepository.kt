@@ -1,6 +1,7 @@
 package net.legio.eve.engine.data.document
 
 import net.legio.eve.engine.core.IWorkspace
+import net.legio.eve.engine.data.DataItem
 import net.legio.eve.engine.toAbsoluteString
 import org.dizitart.kno2.nitrite
 import org.dizitart.no2.FindOptions
@@ -52,7 +53,7 @@ class EsiDocumentDataRepository(workspace: IWorkspace): IEsiDocumentDataReposito
 
     private fun updateMetadata(metadata: RepoMetadata){
         val repo = database.getRepository(RepoMetadata::class.java)
-        if(metadata.objectId == null){
+        if(metadata.id == null){
             repo.insert(metadata)
         }else{
             repo.update(metadata)
@@ -64,25 +65,25 @@ class EsiDocumentDataRepository(workspace: IWorkspace): IEsiDocumentDataReposito
         return repo.find().firstOrNull()?:RepoMetadata.createDefault()
     }
 
-    override fun <T : DocumentItem> registerType(klass: KClass<T>) {
-        getMetadata()?.repoRegistry?.registerKey(klass.simpleName!!, klass)
+    override fun <T : DataItem> registerType(klass: KClass<T>) {
+        getMetadata().repoRegistry.registerKey(klass.simpleName!!, klass)
     }
 
-    override fun <T: DocumentItem> find(options: FindOptions, klass: KClass<T>): List<T> {
+    override fun <T: DataItem> find(options: FindOptions, klass: KClass<T>): List<T> {
         val results = database.getRepository(klass.javaObjectType).find(options)
         return results.toList()
     }
 
-    override fun <T: DocumentItem> find(filter: ObjectFilter, klass: KClass<T>): List<T> {
+    override fun <T: DataItem> find(filter: ObjectFilter, klass: KClass<T>): List<T> {
         val results = database.getRepository(klass.javaObjectType).find(filter)
         return results.toList()
     }
 
-    override fun <T:DocumentItem> insertBulk(items: Array<T>, klass: KClass<T>){
+    override fun <T:DataItem> insertBulk(items: Array<T>, klass: KClass<T>){
         database.getRepository(klass.javaObjectType).insert(items)
     }
 
-    override fun <T : DocumentItem> insert(item: T, klass: KClass<T>) {
+    override fun <T : DataItem> insert(item: T, klass: KClass<T>) {
         database.getRepository(klass.javaObjectType).insert(item)
     }
 

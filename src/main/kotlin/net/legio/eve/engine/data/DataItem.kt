@@ -1,5 +1,5 @@
 package net.legio.eve.engine.data
 
-internal interface DocumentItem {
+internal interface DataItem {
     val id: Long?
 }
